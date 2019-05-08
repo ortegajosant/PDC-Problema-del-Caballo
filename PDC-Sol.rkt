@@ -1,30 +1,5 @@
-;__________________________________________________________
-(define (get matriz fil colum)
-  (cond
-    ((null? matriz)
-     '())
-    (else
-     (getAux matriz fil colum 0))))
-
-(define (getAux matriz fil colum filAux)
-  (cond
-    ((null? matriz)
-     '())
-    ((equal? fil filAux)
-     (getAuxColum (car matriz) colum 0))
-    (else
-     (getAux (cdr matriz) fil colum (+ filAux 1)))))
-
-(define (getAuxColum vec colum columAux)
-  (cond
-    ((null? vec)
-     '())
-    ((equal? colum columAux)
-     (car vec))
-    (else
-     (getAuxColum (cdr vec) colum (+ columAux 1)))))
-
-;----------------------------------------------------------
+#lang racket
+(require "logica_matriz.rkt")
 
 (define (esValido fila columna tamano matriz)
   (cond
@@ -76,10 +51,10 @@
 
 (define (quicksort_aux list pivote menores mayores tamano matriz)
   (cond
-    ((null? list) (append (Quicksort menores tamano matriz) (cons pivote (Quicksort mayores))))
-    ((<= (numPosibles (car list) tamano matriz) (numPosibles pivote tamano matriz)) (quicksort_aux (cdr list) pivote (cons (car list) menores) mayores))
+    ((null? list) (append (Quicksort menores tamano matriz) (cons pivote (Quicksort mayores tamano matriz))))
+    ((<= (numPosibles (car list) tamano matriz) (numPosibles pivote tamano matriz)) (quicksort_aux (cdr list) pivote (cons (car list) menores) mayores tamano matriz))
     (else
-       (quicksort_aux (cdr list) pivote menores (cons (car list) mayores))
+       (quicksort_aux (cdr list) pivote menores (cons (car list) mayores) tamano matriz)
      )
   )
 )
@@ -87,7 +62,7 @@
 ; Da el numero de posibles movimientos que se pueden hacer desde un punto en el tablero
 
 (define (numPosibles lista tamano matriz)
-  (numPosibles_aux (buscarPosibles (car lista) (cadr lista) tamano matriz))
+  (numPosibles_aux (buscarPosible (car lista) (cadr lista) tamano matriz))
 )
 
 (define (numPosibles_aux lista)
@@ -100,10 +75,31 @@
 ;Función principal para solucionar el problema
 ;tamaño = tamaño de la matriz
 ;pos = posición inicial del caballo
-(define (PDC-Sol tamano pos)
- (buscarPosible (car pos) (cadr pos) tamano '((0 0 0) (0 0 0) (0 0 0)))
-;; ordernar la lista posibles 
+(define matriz '((0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0)))
 
+(define (PDC-Sol tamano pos)
+  (resolverProblema pos tamano matriz)
 )
 
-(PDC-Sol 3 '(0 0))
+;; Funcion para llamar a resolver el problema recursivamente
+(define (resolverProblema pos tamano matriz)
+  (resolver_aux (buscarPosible (car pos) (cadr pos) tamano matriz) tamano (insertar matriz 1 (car pos) (cadr pos)) pos)
+)
+
+;; Auxiliar para obtener una solucion 
+(define (resolver_aux lista tamano matriz pos_anterior)
+  (cond ((null? lista) (list))
+        (else (cons pos_anterior (resolverProblema (car (Quicksort lista tamano matriz)) tamano matriz)))       
+  )
+)
+
+;; Auxiliar para obtener todas las solciones
+(define (resolver_aux_todas lista tamano matriz pos_anterior)
+  (cond ((null? lista) (list))
+        (else (list (cons pos_anterior (resolverProblema (car (Quicksort lista tamano matriz)) tamano matriz)))
+              
+              )       
+  )
+)
+
+(PDC-Sol 6 '(6 6))
