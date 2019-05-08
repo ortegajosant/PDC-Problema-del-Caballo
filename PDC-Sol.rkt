@@ -75,31 +75,22 @@
 ;Función principal para solucionar el problema
 ;tamaño = tamaño de la matriz
 ;pos = posición inicial del caballo
-(define matriz '((0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0)))
+(define matriz3 '((0 0 0) (0 0 0) (0 0 0)))
+(define matriz '((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0)))
 
 (define (PDC-Sol tamano pos)
-  (resolverProblema pos tamano matriz)
+  (resolverProblema (cons pos (Quicksort (buscarPosible (car pos) (cadr pos) tamano matriz) tamano matriz)) tamano (insertar matriz 1 (car pos) (cadr pos)))
 )
 
 ;; Funcion para llamar a resolver el problema recursivamente
-(define (resolverProblema pos tamano matriz)
-  (resolver_aux (buscarPosible (car pos) (cadr pos) tamano matriz) tamano (insertar matriz 1 (car pos) (cadr pos)) pos)
-)
-
-;; Auxiliar para obtener una solucion 
-(define (resolver_aux lista tamano matriz pos_anterior)
-  (cond ((null? lista) (list))
-        (else (cons pos_anterior (resolverProblema (car (Quicksort lista tamano matriz)) tamano matriz)))       
+(define (resolverProblema listaBuscar tamano matriz)
+  (cond
+    ((null? listaBuscar) (list))
+  (else
+   (cons (list (car listaBuscar) (resolverProblema (Quicksort (buscarPosible (caar listaBuscar) (cadar listaBuscar) tamano matriz) tamano matriz) tamano (insertar matriz 1 (caar listaBuscar) (cadar listaBuscar))))
+         (resolverProblema (cdr listaBuscar) tamano matriz))   
+   )
   )
 )
 
-;; Auxiliar para obtener todas las solciones
-(define (resolver_aux_todas lista tamano matriz pos_anterior)
-  (cond ((null? lista) (list))
-        (else (list (cons pos_anterior (resolverProblema (car (Quicksort lista tamano matriz)) tamano matriz)))
-              
-              )       
-  )
-)
-
-(PDC-Sol 6 '(6 6))
+(PDC-Sol 5 '(0 0))
