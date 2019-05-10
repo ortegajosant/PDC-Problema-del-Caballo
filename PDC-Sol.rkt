@@ -77,20 +77,91 @@
 ;pos = posición inicial del caballo
 (define matriz3 '((0 0 0) (0 0 0) (0 0 0)))
 (define matriz '((0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0) (0 0 0 0 0)))
+(define matriz4 '((0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0 0)))
+(define matriz6 '((0 0 0 0) (0 0 0 0) (0 0 0 0) (0 0 0 0)))
 
 (define (PDC-Sol tamano pos)
-  (resolverProblema (cons pos (Quicksort (buscarPosible (car pos) (cadr pos) tamano matriz) tamano matriz)) tamano (insertar matriz 1 (car pos) (cadr pos)))
+  (contarEle (unirSoluciones tamano (resolverProblema pos tamano matriz)))
 )
 
-;; Funcion para llamar a resolver el problema recursivamente
-(define (resolverProblema listaBuscar tamano matriz)
+;; Funcion para llamar a resolver l problema recursivamente
+(define (resolverProblema_aux pos listaBuscar tamano matriz)
   (cond
-    ((null? listaBuscar) (list))
+    ((null? listaBuscar)
+     (cond
+       ((revisaMatriz matriz) pos)
+     (else '())
+     )
+    )
   (else
-   (cons (list (car listaBuscar) (resolverProblema (Quicksort (buscarPosible (caar listaBuscar) (cadar listaBuscar) tamano matriz) tamano matriz) tamano (insertar matriz 1 (caar listaBuscar) (cadar listaBuscar))))
-         (resolverProblema (cdr listaBuscar) tamano matriz))   
+   (append (listar_aux (listar pos (listar_aux (resolverProblema (car listaBuscar) tamano matriz)) #f))
+         (listar_aux (listar_aux(resolverProblema_aux pos (cdr listaBuscar) tamano matriz))))
    )
-  )
+  ) 
 )
+
+;;
+(define (resolverProblema pos tamano matriz)
+  (resolverProblema_aux pos (buscarPosible (car pos) (cadr pos) tamano matriz) tamano (insertar matriz 1 (car pos) (cadr pos)))
+ )
+
+
+;;
+(define (listar ele lista flag)
+  (cond
+    ((and (null? lista) flag) '())
+    ((null? lista) ele)
+    ((null? ele) lista)
+    (else
+     (cons (cons ele (listar_aux(car lista))) (listar ele (cdr lista) #t))
+     )
+    )
+  )
+
+(define (listar_aux lista)
+  (cond
+    ((null? lista) lista)
+    ((list? (car lista)) lista)
+    (else
+     (list lista)
+     )
+    )
+  )
+
+(define (revisaMatriz matriz)
+  (cond
+    ((null? matriz) #t)
+    ((revisaMatriz_aux (car matriz)) (revisaMatriz (cdr matriz)))
+    (else #f)
+   )
+)
+
+(define (revisaMatriz_aux fila)
+  (cond
+    ((null? fila) #t)
+    ((= (car fila) 1) (revisaMatriz_aux (cdr fila)))
+    (else #f)
+    )
+)
+
+;
+(define (unirSoluciones tamano lista)
+  (cond
+    ((null? lista) '())
+    ((= (contarEle (car lista)) (* tamano tamano))
+     (cons (car lista) (unirSoluciones tamano (cdr lista))))
+    (else
+     (unirSoluciones tamano (cdr lista)))
+    )
+  )
+
+;
+(define (contarEle lista)
+  (cond
+    ((null? lista) 0)
+    (else
+     (+ 1 (contarEle (cdr lista))))
+    )
+  )
 
 (PDC-Sol 5 '(0 0))
