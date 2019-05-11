@@ -60,10 +60,15 @@
     (else
      (send dc set-pen "green" 3 'solid)))
   (send dc draw-rectangle (* colum grosor) (* fila grosor) grosor grosor)
-  (trazar_flecha grosor dc))
+  (cond
+    ((null? solucion)
+     (trazar_flecha grosor dc movimientos))
+    (else
+     (trazar_flecha grosor dc (cons (car solucion) movimientos))
+  )))
   
 
-(define (trazar_flecha grosor dc)
+(define (trazar_flecha grosor dc movimientos)
   (cond
     ((null? movimientos)
      (send dc draw-point 0 0))
@@ -76,7 +81,8 @@
      (send dc draw-point (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2)))
      (send dc set-pen "blue" 3 'solid)
      (send dc draw-line (+ ( * (cadadr movimientos) grosor) (/ grosor 2)) (+ ( * (caadr movimientos) grosor) (/ grosor 2))
-           (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2))))))
+           (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2)))
+     (trazar_flecha grosor dc (cdr movimientos)))))
 
 
 ;------------------------------------------------------------------------------------------------------
@@ -135,4 +141,4 @@
 
 ;; ---------------------------------------------------------------------------------
 ;; PRUEBA
-(PDC-Paint 40 '((0 2) (2 1) (1 3) (3 4) (4 2) (6 3) (7 5) (5 6) (3 7) (4 5) (2 6) (0 7) (1 5) (2 3) (1 1) (3 0) (5 2) (7 1) (5 0)))
+(PDC-Paint 8 '((0 2) (2 1) (1 3) (3 4) (4 2) (6 3) (7 5) (5 6) (3 7) (4 5) (2 6) (0 7) (1 5) (2 3) (1 1) (3 0) (5 2) (7 1) (5 0)))
