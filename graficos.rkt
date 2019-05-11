@@ -7,14 +7,13 @@
 (define ancho 600)
 (define movimientos '())
 (define solucion '())
+(define trazo (new dc-path%))
 (define frame (new frame%
                    [label "PDC-PAINT"]
                    [width (+ 17 ancho)]
-                   [height (+ 34 largo)]
-                   [stretchable-width (+ 34 largo)]
-                   [stretchable-height (+ 34 largo)]
-                   ))
+                   [height (+ 39 largo)]))
 
+(define knight (make-object bitmap% "knight.png"))
 ;; Función principal que dibuja todos los detalles del tablero
 (define (pintando canvas dc)
   (set! dec dc)
@@ -31,18 +30,54 @@
 (define (pintar_solucion)
   (cond
     ((null? solucion)
+     (pintar_movimiento dec (caar movimientos) (cadar movimientos) (/ ancho n))
+     (send dec draw-bitmap knight (+ (* (cadar movimientos) (/ ancho n)) (/ (- (/ ancho n) (/ 512 n)) 2))
+           (+ (* (caar movimientos) (/ ancho n)) (/ (- (/ ancho n) (/ 512 n)) 2)))
      (send dec set-text-foreground "red")
-     (send dec draw-text "FINALIZADO!" 290 290))
+     (send dec set-pen "red" 2 'solid)
+     (send dec set-brush "white" 'solid)
+     (send dec draw-rectangle 246 260 110 22)
+     (send dec draw-text "¡FINALIZADO!" 250 261))
     (else
-     (pintar_movimiento dec (caar solucion) (cadar solucion) (/ ancho n))
+     (cond
+       ((not (null? movimientos))
+        (pintar_movimiento dec (caar movimientos) (cadar movimientos) (/ ancho n))))
+     (cond
+       ((not (null? solucion))
+        (send dec draw-bitmap knight (+ (* (cadar solucion) (/ ancho n)) (/ (- (/ ancho n) (/ 512 n)) 2))
+              (+ (* (caar solucion) (/ ancho n)) (/ (- (/ ancho n) (/ 512 n)) 2)))))
+     (set! movimientos (cons (car solucion) movimientos))
      (set! solucion (cdr solucion))
      (sleep 1)
      (pintar_solucion))))
 
 ;; Función auxiliar que pinta un casilla específica
 (define (pintar_movimiento dc fila colum grosor)
-  (send dc set-brush "green" 'solid)
-  (send dc draw-rectangle (* colum grosor) (* fila grosor) grosor grosor))
+  (send dc set-brush "gray" 'solid)
+  (cond
+    ((null? (cdr movimientos))
+     (send dc set-pen "yellow" 3 'solid))
+    (else
+     (send dc set-pen "green" 3 'solid)))
+  (send dc draw-rectangle (* colum grosor) (* fila grosor) grosor grosor)
+  (trazar_flecha grosor dc))
+  
+
+(define (trazar_flecha grosor dc)
+  (cond
+    ((null? movimientos)
+     (send dc draw-point 0 0))
+    ((null? (cdr movimientos))
+     (send dc set-pen "blue" 10 'solid)
+     (send dc draw-point (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2)))
+     (send dc set-pen "blue" 3 'solid))
+    (else
+     (send dc set-pen "blue" 10 'solid)
+     (send dc draw-point (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2)))
+     (send dc set-pen "blue" 3 'solid)
+     (send dc draw-line (+ ( * (cadadr movimientos) grosor) (/ grosor 2)) (+ ( * (caadr movimientos) grosor) (/ grosor 2))
+           (+ (* (cadar movimientos) grosor) (/ grosor 2)) (+ (* (caar movimientos) grosor) (/ grosor 2))))))
+
 
 ;------------------------------------------------------------------------------------------------------
 ;; Se colorea el tablero de juego
@@ -66,10 +101,10 @@
   (cond
     ((equal? current #t)
      (send dc set-brush "white" 'solid)
-     (send dc draw-rectangle (* fila grosor) (* colum grosor) (* (+ 1 fila) grosor) (* (+ 1 colum) grosor)))
+     (send dc draw-rectangle (* fila grosor) (* colum grosor) grosor grosor))
     (else
      (send dc set-brush "black" 'solid)
-     (send dc draw-rectangle (* fila grosor) (* colum grosor) (* (+ 1 fila) grosor) (* (+ 1 colum) grosor)))))
+     (send dc draw-rectangle (* fila grosor) (* colum grosor) grosor grosor))))
 
 ;; Dibuja lineas verticales
 (define (lineas_v dc num_lineas grosor)
@@ -93,11 +128,11 @@
 ;; num : tamaño del tablero
 ;; soluc : una solución para el problema del caballo
 (define (PDC-Paint num soluc)
+  (set! knight (make-object bitmap% "knight.png" 'png #f #f num))
   (set! n num)
   (set! solucion soluc)
   (send frame show #t))
 
-;; ----------------------------------------------------------
+;; ---------------------------------------------------------------------------------
 ;; PRUEBA
-(PDC-Paint 5   '((0 0) (1 2) (2 4) (4 3) (3 1) (1 0) (2 2) (0 3) (1 1) (3 0) (4 2) (3 4) (1 3) (0 1) (2 0) (4 1) (3 3) (1 4) (0 2) (2 1) (4 0) (3 2) (4 4) (2 3) (0 4)))
-;; ----------------------------------------------------------
+(PDC-Paint 40 '((0 2) (2 1) (1 3) (3 4) (4 2) (6 3) (7 5) (5 6) (3 7) (4 5) (2 6) (0 7) (1 5) (2 3) (1 1) (3 0) (5 2) (7 1) (5 0)))
