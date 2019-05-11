@@ -1,11 +1,106 @@
 #lang racket
 (require "logica_matriz.rkt")
+(require "graficos.rkt")
 
 ;________________________________________PDC-Sol___________________________________________________
 
+;Ordenaiento de la lista por numero de posibles movimientos (menor a mayor)
+(define (Quicksort lista tamano matriz)
+  (cond ((null? lista) (list))
+  (else
+   (quicksort_aux (cdr lista) (car lista) '() '() tamano matriz)
+  )))
 
+(define (quicksort_aux list pivote menores mayores tamano matriz)
+  (cond
+    ((null? list) (append (Quicksort menores tamano matriz) (cons pivote (Quicksort mayores tamano matriz))))
+    ((<= (numPosibles (car list) tamano matriz) (numPosibles pivote tamano matriz)) (quicksort_aux (cdr list) pivote (cons (car list) menores) mayores tamano matriz))
+    (else
+       (quicksort_aux (cdr list) pivote menores (cons (car list) mayores) tamano matriz)
+     )
+  )
+)
+; Da el numero de posibles movimientos que se pueden hacer desde un punto en el tablero
+(define (numPosibles lista tamano matriz)
+  (numPosibles_aux (buscarPosible (car lista) (cadr lista) tamano matriz #f))
+)
 
-;________________________________________PDC-Todas_________________________________________________
+(define (numPosibles_aux lista)
+  (cond ((null? lista) 0)
+        (else (+ 1 (numPosibles_aux (cdr lista))))
+   )
+)
+
+;Obtiene el ultimo elemento de una lista
+(define (obtenerUltimo lista)
+  (cond ((null? lista) lista)
+        ((null? (cdr lista)) (car lista))
+        (else (obtenerUltimo (cdr lista))
+         )
+   )
+)
+; Eliminar el utlimo de una lista
+(define (eliminarUltimo lista)
+  (cond ((null? (cdr lista)) '())
+        (else (cons (car lista) (eliminarUltimo (cdr lista))))
+   )
+)
+; Primero de la ruta
+(define (primeroRuta ruta)
+  (cond ((null? ruta) '())
+        (else (car ruta))
+   )
+)
+; Comprueba que la ruta a tomar no se haya porbado todavia.
+; return Punto no probado para tomar una ruta
+(define (buscarCamino posiblesCaminos noCamino)
+  (cond ((null? posiblesCaminos) '())
+        ((buscar (car posiblesCaminos) noCamino) (buscarCamino (cdr posiblesCaminos) noCamino))
+        (else (car posiblesCaminos))                                      
+   )
+)
+;Comprueba que un elemento exista en una lista
+(define (buscar ele lista)
+  (cond ((null? lista) #f)
+        ((equal? ele (car lista)) #t)
+        (else (buscar ele (cdr lista)))
+   )
+)
+
+; Funcion para devolverse hasta un punto valido
+(define (puntoValido tamano matriz ruta noCamino)
+  (cond  ((equal? (contarEle ruta) 1) '())
+         ((null? (buscarCamino (buscarPosible (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta)) tamano matriz #f) noCamino))
+               (puntoValido tamano (insertar matriz 0 (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta))) (eliminarUltimo ruta) (cons (obtenerUltimo ruta) noCamino))
+         )
+        (else (resolverProblema1 (buscarCamino (buscarPosible (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta)) tamano matriz #f) noCamino) tamano matriz ruta noCamino )
+         )
+   )  
+)
+
+(define (PDC-Sol tamano pos)
+  (resolverProblema1 pos tamano (creaMatriz tamano 0) '() '())
+
+)
+
+(define (resolverProblema1 pos tamano matriz ruta noCamino)
+  (cond ((equal? (* tamano tamano) (contarEle ruta)) ruta)
+        (else (resolverProblema_aux1 pos (buscarPosible (car pos) (cadr pos) tamano matriz #f) tamano (insertar matriz 1 (car pos) (cadr pos)) (append ruta (list pos)) noCamino)
+         )
+  )
+)
+
+(define (resolverProblema_aux1 pos listaPosibles tamano matriz ruta noCamino)
+  (cond ((null? listaPosibles) (cond ((equal? (* tamano tamano) (contarEle ruta)) ruta )
+                                     (else (puntoValido tamano (insertar matriz 0 (car pos) (cdr pos)) (eliminarUltimo ruta) (cons (obtenerUltimo ruta) noCamino)))
+                               )
+         )
+        (else (resolverProblema1 (car (Quicksort listaPosibles tamano matriz)) tamano matriz ruta noCamino)
+        )
+   )
+)
+
+;________________________________________PDC-Todas________________________________________________________________________________________________________________
 
 ;Función principal para solucionar el problema
 ;tamaño: tamaño de la matriz
@@ -70,21 +165,6 @@
   )
 )
 
-;Da el numero de posibles movimientos que se pueden hacer desde un punto en el tablero.
-;lista: lista de los pares ordenados.
-;tamano: tamaño de la matriz.
-;matriz: matriz lógica encargada de llevar el conteo donde ya ha estado el caballo.
-(define (numPosibles lista tamano matriz)
-  (numPosibles_aux (buscarPosible (car lista) (cadr lista) tamano matriz #f))
-)
-
-;Funcion auxiliar para llevar el conteo de los posibles caminos.
-;lista: lista de los pares ordenados.
-(define (numPosibles_aux lista)
-  (cond ((null? lista) 0)
-        (else (+ 1 (numPosibles_aux (cdr lista))))
-   )
-)
 
 ;Función encargada de recorrer el tablero (matriz) para buscar todos los caminos posibles.
 ;pos: posición en la que se encuentra el caballo actualmente.
@@ -148,7 +228,7 @@
 (define (revisaSolucion tamano solucion matriz)
   (cond
     ((not (= (contarEle solucion) (* tamano tamano)))
-     (write "La ruta dada no recorre o recorre de más todas las casillas del tablero"))
+     (write "La ruta dada no recorre o recorre de más todas las casillas del tablero") #f)
     (else
      (revisaSol_aux tamano solucion (creaMatriz tamano 0) 1)
     )
@@ -166,7 +246,7 @@
     ((revisaMatriz matriz) matriz)
     ((seEncuentra (buscarPosible (caar solucion) (cadar solucion) tamano matriz #t) (cdr solucion))
      (revisaSol_aux tamano (cdr solucion) (insertar matriz cont (caar solucion) (cadar solucion)) (+ cont 1)))
-    (else (write "La solución dada no es correcta"))
+    (else (write "La solución dada no es correcta") #f)
     )
   )
 
@@ -188,6 +268,8 @@
 ;(PDC-Test 5 '((0 0) (2 1) (0 2) (1 0) (3 1) (4 3) (2 2) (1 4) (3 3) (4 1) (2 0) (0 1) (1 3) (3 4) (4 2) (3 0) (1 1) (0 3) (2 4) (1 2) (0 4) (2 3) (4 4) (3 2) (4 0)))
 
 ;______________________________________PDC-Paint_________________________________________________
+
+;(PDC-Paint 5 (PDC-Sol 5 '(1 0)))
 
 
 
