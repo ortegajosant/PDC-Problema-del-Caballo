@@ -1,5 +1,6 @@
 #lang racket
 
+(provide PDC-Paint)
 (require racket/gui)
 (define dec '())
 (define n 0)
@@ -48,7 +49,7 @@
               (+ (* (caar solucion) (/ ancho n)) (/ (- (/ ancho n) (/ 512 n)) 2)))))
      (set! movimientos (cons (car solucion) movimientos))
      (set! solucion (cdr solucion))
-     (sleep 1)
+     (sleep 0.5)
      (pintar_solucion))))
 
 ;; Función auxiliar que pinta un casilla específica
@@ -140,5 +141,3 @@
   (send frame show #t))
 
 ;; ---------------------------------------------------------------------------------
-;; PRUEBA
-(PDC-Paint 8 '((0 2) (2 1) (1 3) (3 4) (4 2) (6 3) (7 5) (5 6) (3 7) (4 5) (2 6) (0 7) (1 5) (2 3) (1 1) (3 0) (5 2) (7 1) (5 0)))
