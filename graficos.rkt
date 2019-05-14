@@ -24,8 +24,8 @@
   (colorear_tablero dc 0 0 (/ ancho n) #f)
   (thread pintar_solucion))
 
-(new canvas% [parent frame]
-             [paint-callback pintando])
+(define canvas1 (new canvas% [parent frame]
+             [paint-callback pintando]))
 
 ;------------------------------------------------------------------------------------------------------
 
@@ -140,6 +140,7 @@
   (set! knight (make-object bitmap% "knight.png" 'png #f #f num))
   (set! n num)
   (set! solucion soluc)
+  (set! movimientos '())
   (send frame show #t))
 
 ;; ---------------------------------------------------------------------------------

@@ -1,8 +1,41 @@
 #lang racket
 (require "logica_matriz.rkt")
 (require "graficos.rkt")
-
 ;________________________________________PDC-Sol___________________________________________________
+
+; PDC-Sol muestra una solución para la ruta del caballo
+; num : tamaño de la matriz
+; pos : par ordenado que con Fila Columna de inicio del recorrido
+; return : lista con el recorrido o lista vacía
+(define (PDC-Sol num pos)
+  (cond
+    ((null? pos)
+     '())
+    ((< num 4)
+     '())
+    ((or (>= (car pos) num) (>= (cadr pos) num))
+     '())
+    (else
+     (PDC-Solaux pos num (Quicksort (buscarPosible (car pos) (cadr pos) num (creaMatriz num 0) #f) num  (creaMatriz num 0))
+               (insertar (creaMatriz num 0) 1 (car pos) (cadr pos)) (list pos)))))
+
+; Función auxiliar que va creando la ruta
+; num : tamaño de la matriz
+; pos : par ordenado que con Fila Columna de inicio del recorrido
+; posibilidades : lista de posibles movimientos para la pos actual
+; ruta : La ruta que debe seguir el caballo
+; return : ruta
+(define (PDC-Solaux pos num posibilidades matriz ruta)
+  (cond
+    ((equal? (* num num) (contarEle ruta))
+     ruta)
+    ((null? posibilidades)
+     '())
+    (else
+     (PDC-Solaux (car posibilidades) num
+                  (Quicksort (buscarPosible (caar posibilidades) (cadar posibilidades) num matriz #f) num matriz)
+                  (insertar matriz 1 (caar posibilidades) (cadar posibilidades)) (append ruta (list (car posibilidades)))))))
+
 
 ;Funcion Quick Sort  para ordenar una lista basandose en los elementos que tienen menor cantidad de movientos
 ; lista : Lista que contiene pares ordenados.
@@ -45,111 +78,6 @@
    )
 )
 
-;Funcion que obtiene el ultimo elemeto de una lista
-; lista : lista para obtener el ultimo elemento
-; return : elemento del la utlima posicion de la lista
-(define (obtenerUltimo lista)
-  (cond ((null? lista) lista)
-        ((null? (cdr lista)) (car lista))
-        (else (obtenerUltimo (cdr lista))
-         )
-   )
-)
-;Funcion que elimina el utlimo de una lista
-; lista : lista a la cual se elimina el ultimo elemento
-; return : Lista sin el ultimo elemento
-(define (eliminarUltimo lista)
-  (cond ((null? (cdr lista)) '())
-        (else (cons (car lista) (eliminarUltimo (cdr lista))))
-   )
-)
-;Funcion que obtiene la primera posicion de la ruta, en caso
-;  de que la ruta no tenga posicion todavia devuelve lista vacia
-; ruta : lista con pares ordenados o nula
-; return : lista con par ordenado de la posicion 
-(define (primeroRuta ruta)
-  (cond ((null? ruta) '())
-        (else (car ruta))
-   )
-)
-; Funcion que que escoge el primer elemento de la lista posiblesCaminos
-;  que no se encuentre en noCamino
-; posiblesCaminos : Lista con pares de movimientos
-; noCamino : lista con movimientos no validos
-; return lista con punto no probado para tomar una ruta
-(define (buscarCamino posiblesCaminos noCamino)
-  (cond ((null? posiblesCaminos) '())
-        ((buscar (car posiblesCaminos) noCamino) (buscarCamino (cdr posiblesCaminos) noCamino))
-        (else (car posiblesCaminos))                                      
-   )
-)
-; Busca un elementos en una lista
-; ele : elemento a buscar el lista
-; lista : lista en la cual se busca el elemento ele
-; return #t en caso de encontrarlo #f en caso contrario
-(define (buscar ele lista)
-  (cond ((null? lista) #f)
-        ((equal? ele (car lista)) #t)
-        (else (buscar ele (cdr lista)))
-   )
-)
-
-; Funcion que aplica un tipo de blacktraking, devolviento todo el algoritmo al paso anterior
-; quita de la ruta la ultima posicion y limpia de la matriz para que la posicion sea utilizable por otro
-; elemento como movimiento
-; tamano : tamano de la matiz
-; matriz : matriz que indica que posiciones estan libres
-; ruta : lista que contiene pares ordenados con movimientos que van formando la ruta de solucion
-(define (puntoValido tamano matriz ruta noCamino)
-  (cond  ((equal? (contarEle ruta) 0) '())
-         ((null? (buscarCamino (buscarPosible (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta)) tamano matriz #f) noCamino))
-               (puntoValido tamano (insertar matriz 0 (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta))) (eliminarUltimo ruta) (cons (obtenerUltimo ruta) noCamino))
-         )
-        (else (resolverProblema1 (buscarCamino (buscarPosible (car (obtenerUltimo ruta)) (cadr (obtenerUltimo ruta)) tamano matriz #f) noCamino) tamano matriz ruta '() )
-         )
-   )  
-)
-
-; Funcion principal que inicia toda la logica para resolver el problema
-; tamano : tamano del tablero en el que se quiere buscar solucion al PDC
-; pos : posicion de inicio desda la cual se resolvera el PDC , lista que representa un par ordenado
-(define (PDC-Sol tamano pos)
-  (cond ((null? pos) '())
-        ((< tamano 4) '())
-        ((or (>= (car pos) tamano) (>= (cadr pos) tamano)) '())
-        (else (resolverProblema1 pos tamano (creaMatriz tamano 0) '() '()))
-  )
-)
-; Funcion desde la cual se aplica la recursion para empezar a recorrer posiciones hasta encontrar una solucion
-; pos : posicion desde la cual se bsucara otro camino para desplazarse a la posible solucion
-; tamano : tamano de la matriz o tablero
-; matriz : matriz con 0s donde hay posiciones validas y 1s donde no
-; ruta : lista con pares ordenados que muestra las posiciones para la solucion
-; noCamino : lista con pares ordenados que indican cuales camino no llevan a una solucion 
-(define (resolverProblema1 pos tamano matriz ruta noCamino)
-  (cond ((equal? (* tamano tamano) (contarEle ruta)) ruta)
-        (else (resolverProblema_aux1 pos (buscarPosible (car pos) (cadr pos) tamano matriz #f) tamano (insertar matriz 1 (car pos) (cadr pos)) (append ruta (list pos)) noCamino)
-         )
-  )
-)
-; Auxiliar para apartir de una lista de posibles movimientos tomar uno, moverse y llamar a solucionar un
-; nuevo problema desde ese nuevo punto.
-; pos : ultimo posicon valida tomada
-; listaPosibles : lista con posibles posciones para un punto
-; tamano : tamano de la matriz o tablero
-; matriz : matriz de control con posiciones validad
-; ruta : lista con posiciones que forman la ruta
-; noCamino : posicones que han sido bloquedas ya que no llevan a una solucion.
-(define (resolverProblema_aux1 pos listaPosibles tamano matriz ruta noCamino)
-  (cond ((null? listaPosibles) (cond ((equal? (* tamano tamano) (contarEle ruta)) ruta )
-                                     (else (puntoValido tamano (insertar matriz 0 (car pos) (cdr pos)) (eliminarUltimo ruta) (cons (obtenerUltimo ruta) noCamino)))
-                               )
-         )
-        (else (resolverProblema1 (car (Quicksort listaPosibles tamano matriz)) tamano matriz ruta noCamino)
-        )
-   )
-)
-
 ;________________________________________PDC-Todas________________________________________________________________________________________________________________
 
 ;Función principal para solucionar el problema
@@ -157,9 +85,16 @@
 ;pos: posición inicial del caballo
 ;retorna: una lista con todos los path los cuales llegan a dar una solución.
 (define (PDC-Todas tamano pos)
-  (unirSoluciones tamano (resolverProblema pos tamano (creaMatriz tamano 0)))
-)
-
+  (cond
+    ((null? pos)
+     '())
+    ((< tamano 4)
+     '())
+    ((or (>= (car pos) tamano) (>= (cadr pos) tamano))
+     '())
+    (else
+     (unirSoluciones tamano (resolverProblema pos tamano (creaMatriz tamano 0))))))
+     
 ;Llama la función para buscar posibles caminos y elimina los que son nulos.
 ;fila: fila donde se encuentra el caballo.
 ;columna: columna donde se encuentra el caballo.
@@ -257,9 +192,6 @@
     )
   )
 
-;;Ejecutar 
-;(PDC-Todas 5 '(0 0))
-
 ;____________________________________PDC-Test____________________________________________________________;
 
 ;Función principal
@@ -267,7 +199,15 @@
 ;solucion: posible solución.
 ;retorna: el recorrido sobre la matriz, si la solución es correcta.
 (define (PDC-Test tamano solucion)
-  (revisaSolucion tamano solucion (creaMatriz tamano 0)))
+  (cond
+    ((null? solucion)
+     (writeln "Solución vacía")
+     #f)
+    ((< tamano 4)
+     (writeln "Este tamaño del tablero no tiene solución")
+     #f)
+    (else
+     (revisaSolucion tamano solucion (creaMatriz tamano 0)))))
 
 ;Valida si el tamaño de la solución es congruente con el tamaño del tablero,
 ;si lo es procede a verificarla.
@@ -313,7 +253,7 @@
      (seEncuentra (cdr listaPosibles) solucion))
     )
   )
-
+;______________________________________PDC-Paint_________________________________________________
 ;; Muestra de manera gráfica la solución del recorrido del caballo
 ;; tamano : un número que indica el tamaño del tablero
 ;; solucion : una solución válida para ese tablero
@@ -325,9 +265,11 @@
     (else
      (writeln "Debe ingresar una solucion válida o un tamaño válido"))))
      
-;Ejecutar 
-;(PDC-Test 5 '((0 0) (2 1) (0 2) (1 0) (3 1) (4 3) (2 2) (1 4) (3 3) (4 1) (2 0) (0 1) (1 3) (3 4) (4 2) (3 0) (1 1) (0 3) (2 4) (1 2) (0 4) (2 3) (4 4) (3 2) (4 0)))
+;Ejecutar ______________________________________
+;(PDC-Sol 100 '(0 0))
 
-;______________________________________PDC-Paint_________________________________________________
+;(PDC-Todas 5 '(0 0))
 
-;(PDC-Paint 5 (PDC-Sol 5 '(0 1)))
+;(PDC-Test 8 (PDC-Sol 8 '(0 0)))
+
+;(PDC-Paint 8 (PDC-Sol 8 '(0 0)))
