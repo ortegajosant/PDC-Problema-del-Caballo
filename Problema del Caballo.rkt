@@ -278,7 +278,7 @@
 (define (revisaSolucion tamano solucion matriz)
   (cond
     ((not (= (contarEle solucion) (* tamano tamano)))
-     (write "La ruta dada no recorre o recorre de más todas las casillas del tablero") #f)
+     (writeln "La ruta dada no recorre o recorre de más todas las casillas del tablero") #f)
     (else
      (revisaSol_aux tamano solucion (creaMatriz tamano 0) 1)
     )
@@ -296,7 +296,7 @@
     ((revisaMatriz matriz) matriz)
     ((seEncuentra (buscarPosible (caar solucion) (cadar solucion) tamano matriz #t) (cdr solucion))
      (revisaSol_aux tamano (cdr solucion) (insertar matriz cont (caar solucion) (cadar solucion)) (+ cont 1)))
-    (else (write "La solución dada no es correcta") #f)
+    (else (writeln "La solución dada no es correcta") #f)
     )
   )
 
@@ -313,23 +313,21 @@
      (seEncuentra (cdr listaPosibles) solucion))
     )
   )
+
+;; Muestra de manera gráfica la solución del recorrido del caballo
+;; tamano : un número que indica el tamaño del tablero
+;; solucion : una solución válida para ese tablero
+;; retorna : Muestra gráficamente el recorrido del caballo en el tablero o imprime en pantalla las razones por las que no se ha podido realizar la labor.
+(define (PDC-Paint tamano solucion)
+  (cond
+    ((list? (PDC-Test tamano solucion))
+     (PDC-Paint-Graph tamano solucion))
+    (else
+     (writeln "Debe ingresar una solucion válida o un tamaño válido"))))
      
 ;Ejecutar 
 ;(PDC-Test 5 '((0 0) (2 1) (0 2) (1 0) (3 1) (4 3) (2 2) (1 4) (3 3) (4 1) (2 0) (0 1) (1 3) (3 4) (4 2) (3 0) (1 1) (0 3) (2 4) (1 2) (0 4) (2 3) (4 4) (3 2) (4 0)))
 
 ;______________________________________PDC-Paint_________________________________________________
 
-;(PDC-Paint 5 (PDC-Sol 5 '(1 0)))
-
-
-
-
-
-
-
-
-
-
-
-
-
+;(PDC-Paint 5 (PDC-Sol 5 '(0 1)))

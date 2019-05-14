@@ -1,21 +1,23 @@
 #lang racket
 
-(provide PDC-Paint)
+(provide PDC-Paint-Graph)
 (require racket/gui)
-(define dec '())
-(define n 0)
-(define largo 600)
-(define ancho 600)
-(define movimientos '())
-(define solucion '())
-(define trazo (new dc-path%))
+(define dec '()) ; Variable requerida para pintar en el canvas
+(define n 0) ; Tamaño del tablero, necesario para escalar los elementos
+(define largo 600) ; Largo del tablero
+(define ancho 600) ; Ancho del tablero
+(define movimientos '()) ; Movimientos realizados por el caballo
+(define solucion '()) ; Pila con la solución del caballo
 (define frame (new frame%
                    [label "PDC-PAINT"]
                    [width (+ 17 ancho)]
-                   [height (+ 39 largo)]))
+                   [height (+ 39 largo)])) ; Canvas para dibujar todo
 
 (define knight (make-object bitmap% "knight.png"))
+
+
 ;; Función principal que dibuja todos los detalles del tablero
+;; Es requerida por el canvas
 (define (pintando canvas dc)
   (set! dec dc)
   (send dc set-scale 1 1)
@@ -53,13 +55,18 @@
      (pintar_solucion))))
 
 ;; Función auxiliar que pinta un casilla específica
+;; dc : se recibe dec, necesario para pintar
+;; fila : fila de la matriz a pintar
+;; colum : columna de la matriz a pintar
+;; grosor : se refiere al tamaño de las casillas
+;; retorna : ejecuta las acciones gráficas
 (define (pintar_movimiento dc fila colum grosor)
   (send dc set-brush "gray" 'solid)
   (cond
     ((null? (cdr movimientos))
      (send dc set-pen "yellow" 3 'solid))
     (else
-     (send dc set-pen "green" 3 'solid)))
+     (send dc set-pen "green" 1.5 'solid)))
   (send dc draw-rectangle (* colum grosor) (* fila grosor) grosor grosor)
   (cond
     ((null? solucion)
@@ -68,7 +75,10 @@
      (trazar_flecha grosor dc (cons (car solucion) movimientos))
   )))
   
-
+;; Dibuja el patrón que seguido el caballo en la matriz
+;; grosor : tamaño de las casillas en la matriz
+;; movimientos : movimientos realizados por el caballo
+;; retorna : ejecuta acciones gráficas
 (define (trazar_flecha grosor dc movimientos)
   (cond
     ((null? movimientos)
@@ -88,6 +98,11 @@
 
 ;------------------------------------------------------------------------------------------------------
 ;; Se colorea el tablero de juego
+;; dc : se recibe dec, necesario para pintar
+;; fila : fila de la matriz a pintar
+;; colum : columna de la matriz a pintar
+;; grosor : se refiere al tamaño de las casillas
+;; current : #t o #f, true si es una casilla par, #f si es una casilla impar
 (define (colorear_tablero dc fila colum grosor current)
   (cond
     ((and (equal? (- n 1) fila) (equal? colum (- n 1)))
@@ -104,6 +119,11 @@
      (colorear_tablero dc fila (+ colum 1) grosor (not current)))))
 
 ;; Función auxiliar que colorea el tablero de juego de blanco y negro
+;; dc : se recibe dec, necesario para pintar
+;; fila : fila de la matriz a pintar
+;; colum : columna de la matriz a pintar
+;; grosor : se refiere al tamaño de las casillas
+;; current : #t o #f, true si es una casilla par, #f si es una casilla impar
 (define (colorear dc fila colum grosor current)
   (cond
     ((equal? current #t)
@@ -113,28 +133,10 @@
      (send dc set-brush "black" 'solid)
      (send dc draw-rectangle (* fila grosor) (* colum grosor) grosor grosor))))
 
-;; Dibuja lineas verticales
-(define (lineas_v dc num_lineas grosor)
-  (cond
-    ((equal? 1 num_lineas)
-     (send dc draw-line (* num_lineas grosor) 0 (* num_lineas grosor) largo))
-    (else
-     (send dc draw-line (* num_lineas grosor) 0 (* num_lineas grosor) largo)
-     (lineas_v dc (- num_lineas 1) grosor))))
-
-;; Dibuja lineas horizontales
-(define (lineas_h dc num_lineas grosor)
-  (cond
-    ((equal? 1 num_lineas)
-     (send dc draw-line 0 (* num_lineas grosor) ancho (* num_lineas grosor)))
-    (else
-     (send dc draw-line 0 (* num_lineas grosor) ancho (* num_lineas grosor))
-     (lineas_h dc (- num_lineas 1) grosor))))
-
 ;; Funcion que inicia el recorrido de la solución gráfica
 ;; num : tamaño del tablero
 ;; soluc : una solución para el problema del caballo
-(define (PDC-Paint num soluc)
+(define (PDC-Paint-Graph num soluc)
   (set! knight (make-object bitmap% "knight.png" 'png #f #f num))
   (set! n num)
   (set! solucion soluc)
